@@ -1,0 +1,19 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: Ruff lint
+        entry: uv run --locked ruff check
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: Ruff format check
+        entry: uv run --locked ruff format --check
+        language: system
+        types: [python]
+      - id: mypy
+        name: mypy
+        entry: uv run --locked mypy ingredia
+        language: system
+        files: ^(ingredia/.*\.py|pyproject\.toml)$
+        pass_filenames: false
