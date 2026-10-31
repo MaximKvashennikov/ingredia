@@ -1,0 +1,14 @@
+Tool: built-in image_gen
+Reference: telegram-avatar-v1.png
+
+Use case: logo-brand. Image 1 is the existing ingredia user bot avatar and is a visual style and
+identity reference. Create a matching but clearly distinguishable Telegram administrator bot avatar.
+Keep the same premium soft sculpted 3D ivory refrigerator, slightly open door showing a ripe coral
+tomato and green leaves, dark forest green full bleed background, lighting and cohesive shape
+language. Add one prominent small tasteful forest-green shield badge with a warm gold rim and a
+simple ivory checkmark to the lower part of the fridge door to communicate account administration.
+Badge must remain identifiable at small size; do not cover the tomato or main door handle. A
+polished restrained brand mark, no clutter. Centered square composition with generous margins
+suitable for Telegram circular cropping; essential details inside the central 70 percent. No
+lettering, no words, no watermarks, no border, no mockup. One finished avatar, not a grid of
+variants. Match Image 1 rather than inventing a new visual identity.

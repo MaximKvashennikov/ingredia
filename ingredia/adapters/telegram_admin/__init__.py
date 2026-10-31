@@ -1,0 +1,1 @@
+"""Separate administrative Telegram transport."""

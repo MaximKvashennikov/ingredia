@@ -1,0 +1,45 @@
+name: ingredia
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ingredia
+      POSTGRES_USER: ingredia
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ingredia -d ingredia"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+  migrate:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE__URL: postgresql+asyncpg://ingredia:${POSTGRES_PASSWORD}@postgres:5432/ingredia
+    command: ["/app/.venv/bin/alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE__URL: postgresql+asyncpg://ingredia:${POSTGRES_PASSWORD}@postgres:5432/ingredia
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+volumes:
+  postgres_data:
