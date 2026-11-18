@@ -4,7 +4,7 @@ import asyncio
 from datetime import UTC, datetime
 
 from aiogram import Bot
-from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage
+from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage, SendRichMessage
 from aiogram.types import CallbackQuery, Chat, Message, Update, User
 from test_accounts import database
 from test_telegram import FakeRecognizer, FakeSession
@@ -22,6 +22,9 @@ class Session(FakeSession):
         if isinstance(method, AnswerCallbackQuery | EditMessageText):
             self.methods.append(method)
             return True
+        if isinstance(method, SendRichMessage):
+            self.methods.append(method)
+            return Message(message_id=100, date=datetime.now(UTC), chat=Chat(id=1, type="private"))
         return await super().make_request(bot, method, timeout)
 
 
@@ -127,3 +130,48 @@ def test_cancel_admin_confirmation_and_group_denial():
             await bot.session.close()
 
     asyncio.run(run())
+
+
+def rich_buttons(method):
+    """Collect callbacks from paragraphs and table cells as sent to Telegram."""
+    from aiogram.types import RichMessageButton
+    from pydantic import BaseModel
+
+    def visit(value):
+        if isinstance(value, RichMessageButton):
+            return [value]
+        if isinstance(value, BaseModel):
+            return [button for item in value.__dict__.values() for button in visit(item)]
+        if isinstance(value, list):
+            return [button for item in value for button in visit(item)]
+        return []
+
+    return visit(getattr(method, "rich_message", None))
+
+
+def visible_text(method):
+    """Collect visible plain rich text and labels rather than serialized callback payloads."""
+    from pydantic import BaseModel
+
+    def visit(value):
+        if isinstance(value, str):
+            return value
+        if isinstance(value, list):
+            return "".join(visit(item) for item in value)
+        if isinstance(value, BaseModel):
+            if hasattr(value, "cells"):
+                return "\\n".join(" | ".join(visit(cell) for cell in row) for row in value.cells)
+            if hasattr(value, "button"):
+                return visit(value.button.text)
+            return visit(getattr(value, "text", ""))
+        return ""
+
+    content = getattr(method, "rich_message", None)
+    if content:
+        if content.html:
+            import re
+            from html import unescape
+
+            return unescape(re.sub(r"<[^>]+>", "", content.html))
+        return "\n".join(visit(block) for block in content.blocks or [])
+    return method.text or ""

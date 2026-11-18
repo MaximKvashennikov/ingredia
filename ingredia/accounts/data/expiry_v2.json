@@ -1,0 +1,318 @@
+[
+  {
+    "id": "milk",
+    "names": [
+      "молоко",
+      "молоко пастеризованное",
+      "пастеризованное молоко"
+    ],
+    "days": 7,
+    "conditions": "Пастеризованное молоко, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/",
+    "exclude": [
+      "сгущ",
+      "сухое",
+      "растительн",
+      "кокос",
+      "миндал",
+      "соев"
+    ]
+  },
+  {
+    "id": "eggs",
+    "names": [
+      "яйца",
+      "яйцо",
+      "куриные яйца",
+      "яйца куриные"
+    ],
+    "days": 21,
+    "conditions": "Сырые яйца в скорлупе, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/",
+    "exclude": [
+      "варен",
+      "жарен",
+      "маринов",
+      "салат"
+    ]
+  },
+  {
+    "id": "yogurt",
+    "names": [
+      "йогурт",
+      "йогурт натуральный",
+      "натуральный йогурт"
+    ],
+    "days": 7,
+    "conditions": "Йогурт, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "sour-cream",
+    "names": [
+      "сметана"
+    ],
+    "days": 7,
+    "conditions": "Сметана, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "apples",
+    "names": [
+      "яблоко",
+      "яблоки"
+    ],
+    "days": 28,
+    "conditions": "Целые яблоки, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "cucumber",
+    "names": [
+      "огурец",
+      "огурцы"
+    ],
+    "days": 4,
+    "conditions": "Целые огурцы, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "carrot",
+    "names": [
+      "морковь",
+      "морковка"
+    ],
+    "days": 14,
+    "conditions": "Целая морковь, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "cabbage",
+    "names": [
+      "капуста",
+      "капуста белокочанная",
+      "белокочанная капуста"
+    ],
+    "days": 7,
+    "conditions": "Целый кочан капусты, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "broccoli",
+    "names": [
+      "брокколи"
+    ],
+    "days": 3,
+    "conditions": "Свежая брокколи, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "zucchini",
+    "names": [
+      "кабачок",
+      "кабачки",
+      "цукини"
+    ],
+    "days": 4,
+    "conditions": "Целые кабачки, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "chicken",
+    "names": [
+      "сырая курица",
+      "курица сырая",
+      "свежее куриное филе",
+      "куриное филе сырое",
+      "курица",
+      "куриное филе",
+      "куриная грудка",
+      "филе куриной грудки"
+    ],
+    "days": 1,
+    "conditions": "Сырая курица, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/",
+    "exclude": [
+      "копчен",
+      "варен",
+      "жарен",
+      "тушен",
+      "консерв",
+      "вялен",
+      "сушен",
+      "маринов"
+    ]
+  },
+  {
+    "id": "mince",
+    "names": [
+      "сырой фарш",
+      "фарш сырой",
+      "фарш",
+      "фарш говяжий",
+      "фарш свиной",
+      "фарш куриный"
+    ],
+    "days": 1,
+    "conditions": "Сырой мясной фарш, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/",
+    "exclude": [
+      "копчен",
+      "варен",
+      "жарен",
+      "тушен",
+      "консерв",
+      "вялен",
+      "сушен",
+      "маринов"
+    ]
+  },
+  {
+    "id": "citrus",
+    "names": [
+      "апельсин",
+      "апельсины",
+      "мандарины",
+      "мандарин"
+    ],
+    "days": 10,
+    "conditions": "Целые цитрусовые, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "grapes",
+    "names": [
+      "виноград"
+    ],
+    "days": 7,
+    "conditions": "Свежий виноград, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "condensed-milk",
+    "names": [
+      "молоко сгущенное",
+      "сгущенное молоко",
+      "сгущенка"
+    ],
+    "days": 4,
+    "conditions": "Сгущённое молоко после вскрытия, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "cottage-cheese",
+    "names": [
+      "творог",
+      "рикотта"
+    ],
+    "days": 7,
+    "conditions": "Творожный продукт после вскрытия, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "hard-cheese",
+    "names": [
+      "твердый сыр",
+      "сыр твердый",
+      "пармезан",
+      "чеддер"
+    ],
+    "days": 21,
+    "conditions": "Твёрдый сыр после вскрытия, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "soft-cheese",
+    "names": [
+      "мягкий сыр",
+      "сыр бри",
+      "бри"
+    ],
+    "days": 7,
+    "conditions": "Мягкий сыр, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "butter",
+    "names": [
+      "масло сливочное",
+      "сливочное масло"
+    ],
+    "days": 30,
+    "conditions": "Сливочное масло, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "fish",
+    "names": [
+      "рыба свежая",
+      "свежая рыба",
+      "лосось свежий"
+    ],
+    "days": 1,
+    "conditions": "Свежая рыба, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "bananas",
+    "names": [
+      "банан",
+      "бананы"
+    ],
+    "days": 3,
+    "conditions": "Спелые бананы, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "tomatoes",
+    "names": [
+      "помидор",
+      "помидоры",
+      "томат",
+      "томаты"
+    ],
+    "days": 1,
+    "conditions": "Спелые целые томаты, холодильник ≤4 °C",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "potatoes",
+    "names": [
+      "картофель",
+      "картошка"
+    ],
+    "days": 30,
+    "conditions": "Целый картофель, прохладное тёмное место",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "rice",
+    "names": [
+      "рис"
+    ],
+    "days": 365,
+    "conditions": "Сухой рис, закрытая упаковка в сухом шкафу",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "pasta",
+    "names": [
+      "макароны",
+      "спагетти",
+      "паста сухая"
+    ],
+    "days": 365,
+    "conditions": "Сухие макароны, закрытая упаковка",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  },
+  {
+    "id": "flour",
+    "names": [
+      "мука пшеничная",
+      "пшеничная мука"
+    ],
+    "days": 180,
+    "conditions": "Пшеничная мука, закрытая упаковка в сухом шкафу",
+    "source": "https://food.unl.edu/free-resource/food-storage/"
+  }
+]

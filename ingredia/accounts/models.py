@@ -66,6 +66,7 @@ class BatchView(BaseModel):
     expiry: date | None
     expiry_source: str
     expiry_estimate: ExpiryEstimate | None = None
+    version: int = 1
 
 
 class AccountFilter(StrEnum):

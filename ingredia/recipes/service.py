@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from ingredia.accounts.access import active_account
 from ingredia.accounts.models import AccessDenied, BatchView
 from ingredia.accounts.retention import purge_owner
+from ingredia.accounts.stock_expiry import fill_missing_expiry
 from ingredia.clock import current_date
 from ingredia.recipes.availability import check_ingredient
 from ingredia.recipes.models import (
@@ -56,6 +57,7 @@ class RecipeService:
     async def _stock(self, actor: int, bounded: bool = True) -> list[BatchView]:
         async with self._sessions.begin() as session:
             owner = await active_account(session, actor)
+            await fill_missing_expiry(session, owner.id, self._today())
             await purge_owner(session, owner.id, self._today())
             rows = await session.scalars(
                 select(Batch)

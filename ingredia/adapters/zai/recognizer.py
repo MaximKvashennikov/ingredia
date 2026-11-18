@@ -32,7 +32,9 @@ class ZaiPhotoRecognizer:
                 SystemMessage(content=render_photo_prompt()),
                 UserMessage(
                     content=[
-                        TextPart(text="Распознай продукты на этой фотографии."),
+                        TextPart(
+                            text="Распознай покупки: на фото могут быть продукты или магазинный чек."
+                        ),
                         ImagePart(image_url=ImageURL.from_photo(photo)),
                     ]
                 ),

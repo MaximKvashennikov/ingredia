@@ -12,7 +12,8 @@ from ingredia.recognition.models import PhotoRecognition
 @lru_cache
 def prompt_template(kind: Literal["food_photo", "purchase_text"]) -> Template:
     """Resolve only trusted versioned resource names."""
-    resource = files("ingredia.recognition").joinpath(f"prompts/{kind}_v1.txt")
+    resources = {"food_photo": "purchase_photo_v2.txt", "purchase_text": "purchase_text_v1.txt"}
+    resource = files("ingredia.recognition").joinpath("prompts", resources[kind])
     return Template(resource.read_text(encoding="utf-8"))
 
 

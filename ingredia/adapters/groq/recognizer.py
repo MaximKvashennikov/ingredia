@@ -34,7 +34,9 @@ class GroqRecognizer:
                 SystemMessage(content=render_prompt("food_photo")),
                 UserMessage(
                     content=[
-                        TextPart(text="Распознай продукты на этой фотографии."),
+                        TextPart(
+                            text="Распознай покупки: на фото могут быть продукты или магазинный чек."
+                        ),
                         ImagePart(image_url=ImageURL.from_photo(photo)),
                     ]
                 ),

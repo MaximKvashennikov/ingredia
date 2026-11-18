@@ -28,6 +28,7 @@ async def purge_owner(session: AsyncSession, owner_id: str, today: date) -> int:
                 .where(
                     Batch.owner_id == owner_id,
                     Batch.expiry < cutoff,
+                    Batch.expiry_source != "review",
                 )
                 .order_by(Batch.id)
                 .limit(BATCH_SIZE)
@@ -66,7 +67,7 @@ class StockRetention:
                 owners = list(
                     await session.scalars(
                         select(Batch.owner_id)
-                        .where(Batch.expiry < cutoff)
+                        .where(Batch.expiry < cutoff, Batch.expiry_source != "review")
                         .distinct()
                         .order_by(Batch.owner_id)
                         .limit(100)

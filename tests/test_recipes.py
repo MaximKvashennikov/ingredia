@@ -85,7 +85,7 @@ def test_recipe_favorite_snapshot_persistence_and_foreign_access(postgres):
             view = views[0]
             assert view.ingredients[0].status == Availability.AVAILABLE
             assert view.ingredients[1].status == Availability.MISSING
-            assert "срок неизвестен" in view.ingredients[0].note
+            assert "срок по оценке" in view.ingredients[0].note
             await recipes.favorite(1, view.id, True)
             await recipes.favorite(1, view.id, True)
             restarted = make_service(sessions, generator)

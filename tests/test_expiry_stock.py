@@ -6,9 +6,9 @@ from datetime import date, timedelta
 
 import pytest
 from aiogram import Bot
-from aiogram.methods import EditMessageText, SendMessage
+from aiogram.methods import EditMessageText, SendRichMessage
 from test_accounts import database
-from test_navigation import Session, callback, update
+from test_navigation import Session, callback, rich_buttons, update, visible_text
 from test_telegram import FakeRecognizer, photo_update
 
 from ingredia.accounts.expiry import estimate_expiry
@@ -23,7 +23,12 @@ from ingredia.recognition.service import PhotoTrial
 
 @pytest.mark.parametrize("postgres", [False, True])
 def test_purchase_estimates_explicit_dates_and_opt_out(recognition, postgres):
-    """Preview dates persist separately, never override labels and can be declined."""
+    """Сохранить справочные оценки отдельно от явных дат и поддержать отказ от оценки.
+
+    Args:
+        recognition: Синтетический результат распознавания покупки.
+        postgres: Использовать изолированную схему PostgreSQL вместо SQLite.
+    """
     if postgres and not os.getenv("TEST_DATABASE_URL"):
         pytest.skip("PostgreSQL not configured")
     url = os.environ["TEST_DATABASE_URL"] if postgres else "sqlite+aiosqlite:///:memory:"
@@ -41,7 +46,7 @@ def test_purchase_estimates_explicit_dates_and_opt_out(recognition, postgres):
             item = (await service.inventory(1))[0]
             assert item.expiry == estimate.expiry and item.expiry_source == "estimated"
             assert item.expiry_estimate.source.startswith("https://food.unl.edu/")
-            assert "по оценке" in stock_card(item) and "4 °C" in stock_card(item)
+            assert "Примерно до" in stock_card(item) and "4 °C" in stock_card(item)
             explicit = recognition.model_copy(deep=True)
             explicit.products[0].expiry_date = current_date() + timedelta(days=2)
             explicit.products[0].expiry_evidence = "Синтетическая маркировка"
@@ -58,7 +63,7 @@ def test_purchase_estimates_explicit_dates_and_opt_out(recognition, postgres):
             assert labeled_stock.expiry_estimate is None
             plain = await service.preview_purchase(1, "plain", recognition)
             await service.decide_purchase(1, str(plain.id), True, use_estimates=False)
-            unknown = [row for row in await service.inventory(1) if row.expiry_source == "unknown"]
+            unknown = [row for row in await service.inventory(1) if row.expiry_source == "declined"]
             assert len(unknown) == 1 and unknown[0].expiry is None
 
     asyncio.run(run())
@@ -67,10 +72,19 @@ def test_purchase_estimates_explicit_dates_and_opt_out(recognition, postgres):
 @pytest.mark.parametrize(
     "name", ["Молоко сгущённое", "Салат с яйцом", "Курица копчёная", "Неизвестный соус"]
 )
-def test_ambiguous_product_forms_get_no_fabricated_estimate(recognition, name):
-    """Conservative matching cannot apply a raw or plain rule to a processed food."""
+def test_processed_products_do_not_reuse_raw_product_rule(recognition, name):
+    """Не применять правило сырого продукта к готовому или обработанному блюду.
+
+    Args:
+        recognition: Синтетический результат распознавания покупки.
+        name: Название обработанного продукта для проверки правила.
+    """
     item = recognition.products[0].model_copy(update={"name": name})
-    assert estimate_expiry(item, date(2026, 10, 30)) is None
+    estimate = estimate_expiry(item, date(2026, 10, 30))
+    if "сгущ" in name:
+        assert estimate is not None and estimate.rule_id == "condensed-milk"
+    else:
+        assert estimate is None
 
 
 def test_compact_fridge_edit_navigation_and_owner_cards(recognition):
@@ -92,13 +106,11 @@ def test_compact_fridge_edit_navigation_and_owner_cards(recognition):
             dispatcher = create_dispatcher(PhotoTrial(FakeRecognizer(recognition), None), service)
             await dispatcher.feed_update(bot, update(1, "Мой холодильник"))
             screen = session.methods[-1]
-            assert isinstance(screen, SendMessage)
-            assert len(screen.text) < 250 and "Продукт 0" not in screen.text
-            assert "\n" in screen.text and r"\n" not in screen.text
+            assert isinstance(screen, SendRichMessage)
+            assert "Сортировка по сроку годности" in visible_text(screen)
             products = [
                 button
-                for row in screen.reply_markup.inline_keyboard
-                for button in row
+                for button in rich_buttons(screen)
                 if button.callback_data.startswith("stock:")
             ]
             assert len(products) == 6
@@ -107,9 +119,9 @@ def test_compact_fridge_edit_navigation_and_owner_cards(recognition):
             assert "недоступен" in session.methods[-1].text
             await dispatcher.feed_update(bot, callback(1, products[0].callback_data, 101))
             assert isinstance(session.methods[-1], EditMessageText)
-            assert "Продукт 0" in session.methods[-1].text
+            assert "Продукт 0" in visible_text(session.methods[-1])
             await dispatcher.feed_update(bot, callback(1, "fridge:1", 102))
-            assert "Страница 2 из 2" in session.methods[-1].text
+            assert "Страница 2 из 2" in visible_text(session.methods[-1])
             assert isinstance(session.methods[-1], EditMessageText)
             with pytest.raises(AccessDenied):
                 await service.stock_item(2, page.items[0].id)

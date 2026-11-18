@@ -47,6 +47,7 @@ class Batch(Base):
     unit: Mapped[str | None] = mapped_column(String(8))
     expiry: Mapped[date | None] = mapped_column(Date, index=True)
     expiry_source: Mapped[str] = mapped_column(String(20), default="unknown")
+    added_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     expiry_estimate: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
     version: Mapped[int] = mapped_column(default=1)
 
@@ -92,3 +93,15 @@ class RemovedStockEvent(Base):
     __tablename__ = "removed_stock_events"
     event_key: Mapped[str] = mapped_column(String(100), primary_key=True)
     removed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class StockRemovalDraft(Base):
+    """A short-lived owner-bound snapshot for explicit destructive confirmation."""
+
+    __tablename__ = "stock_removal_drafts"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    owner_id: Mapped[str] = mapped_column(ForeignKey("accounts.id"), index=True)
+    mode: Mapped[str] = mapped_column(String(8))
+    payload: Mapped[list[dict[str, object]]] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String(16), default="pending")
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

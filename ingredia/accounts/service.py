@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.sql.elements import ColumnElement
 
 from ingredia.accounts.access import active_account
-from ingredia.accounts.expiry import estimate_expiry
+from ingredia.accounts.expiry import estimate_expiry, estimate_name
 from ingredia.accounts.models import (
     AccessDenied,
     AccountFilter,
@@ -21,7 +21,9 @@ from ingredia.accounts.models import (
     StockPage,
 )
 from ingredia.accounts.purchases import PurchaseContents, PurchasePreview, load_contents, to_stock
+from ingredia.accounts.removal import StockRemovalService
 from ingredia.accounts.retention import purge_owner
+from ingredia.accounts.stock_expiry import fill_missing_expiry
 from ingredia.clock import current_date
 from ingredia.recognition.models import PhotoRecognition
 from ingredia.storage.models import Account, Audit, Batch, PurchaseDraft, RemovedStockEvent
@@ -40,6 +42,7 @@ class AccountService:
         self._sessions = sessions
         self._admins = admins
         self._today = today
+        self.removals = StockRemovalService(sessions)
 
     async def register(self, telegram_id: int, name: str) -> AccountView:
         """Resolve identity atomically using the Telegram uniqueness constraint."""
@@ -71,6 +74,7 @@ class AccountService:
             raise ValueError("Invalid stock page")
         async with self._sessions.begin() as session:
             owner = await active_account(session, actor)
+            await fill_missing_expiry(session, owner.id, self._today())
             await purge_owner(session, owner.id, self._today())
             total = (
                 await session.scalar(
@@ -82,7 +86,7 @@ class AccountService:
             rows = await session.scalars(
                 select(Batch)
                 .where(Batch.owner_id == owner.id)
-                .order_by(Batch.name, Batch.id)
+                .order_by(Batch.expiry.is_(None), Batch.expiry, Batch.name, Batch.id)
                 .offset(page * 6)
                 .limit(6)
             )
@@ -93,7 +97,20 @@ class AccountService:
             )
 
     async def add(self, telegram_id: int, event_key: str, data: BatchInput) -> BatchView:
-        """Save manual stock once; the actor lock serializes duplicate submissions."""
+        """Сохранить ручную покупку один раз и автоматически оценить применимый срок.
+
+        Args:
+            telegram_id: Доверенный Telegram ID владельца запасов.
+            event_key: Ключ входного события для защиты от повторной доставки.
+            data: Проверенные атрибуты продукта с необязательной явной датой.
+
+        Returns:
+            Сохранённая партия; без справочного правила дата остаётся неизвестной.
+
+        Raises:
+            AccessDenied: Аккаунт отсутствует или заблокирован.
+            Conflict: Событие относится к ранее удалённой партии.
+        """
         async with self._sessions.begin() as session:
             owner = await active_account(session, telegram_id)
             key = f"{owner.id}:{event_key}"
@@ -102,14 +119,20 @@ class AccountService:
             existing = await session.scalar(select(Batch).where(Batch.event_key == key))
             if existing is not None:
                 return BatchView.model_validate(existing)
+            estimate = estimate_name(data.name, self._today()) if data.expiry is None else None
+            source = "user" if data.expiry else "unavailable"
+            if estimate is not None:
+                source = "estimated"
             row = Batch(
                 owner_id=owner.id,
                 event_key=key,
                 name=data.name,
                 quantity=data.quantity,
                 unit=data.unit,
-                expiry=data.expiry,
-                expiry_source="user" if data.expiry else "unknown",
+                expiry=data.expiry or (estimate.expiry if estimate else None),
+                expiry_source=source,
+                expiry_estimate=estimate.model_dump(mode="json") if estimate else None,
+                added_on=self._today(),
             )
             session.add(row)
             await session.flush()
@@ -261,7 +284,21 @@ class AccountService:
     async def decide_purchase(
         self, actor: int, draft_id: str, accept: bool, use_estimates: bool = True
     ) -> int:
-        """Apply a private preview atomically once, including all its inventory rows."""
+        """Подтвердить или отменить собственный список покупок атомарно и однократно.
+
+        Args:
+            actor: Доверенный Telegram ID владельца списка.
+            draft_id: ID сохранённого предварительного списка покупок.
+            accept: True для сохранения партий; False для отмены списка.
+            use_estimates: Применять справочные оценки к продуктам без явного срока.
+
+        Returns:
+            Количество добавленных партий или 0 при отмене.
+
+        Raises:
+            AccessDenied: Аккаунт недоступен или список не принадлежит пользователю.
+            Conflict: Список устарел, уже обработан либо требует уточнения.
+        """
         async with self._sessions.begin() as session:
             owner = await active_account(session, actor)
             row = await session.scalar(
@@ -291,6 +328,15 @@ class AccountService:
                     if use_estimates and index < len(contents.estimates)
                     else None
                 )
+                if estimate is not None and estimate.stock_source == "review":
+                    estimate = None
+                if use_estimates and command.expiry is None and estimate is None:
+                    estimate = estimate_name(command.name, self._today())
+                source = "unavailable" if use_estimates else "declined"
+                if estimate is not None:
+                    source = estimate.stock_source
+                if command.expiry is not None:
+                    source = "confirmed"
                 session.add(
                     Batch(
                         owner_id=owner.id,
@@ -299,14 +345,9 @@ class AccountService:
                         quantity=command.quantity,
                         unit=command.unit,
                         expiry=command.expiry or (estimate.expiry if estimate else None),
-                        expiry_source=(
-                            "confirmed"
-                            if command.expiry
-                            else "estimated"
-                            if estimate
-                            else "unknown"
-                        ),
+                        expiry_source=source,
                         expiry_estimate=estimate.model_dump(mode="json") if estimate else None,
+                        added_on=self._today(),
                     )
                 )
             row.status = "saved"
@@ -317,6 +358,7 @@ class AccountService:
         """Commit own expiry cleanup before rejecting a stale or foreign card."""
         async with self._sessions.begin() as session:
             owner = await active_account(session, actor)
+            await fill_missing_expiry(session, owner.id, self._today())
             await purge_owner(session, owner.id, self._today())
             row = await session.scalar(
                 select(Batch).where(Batch.id == identifier, Batch.owner_id == owner.id)

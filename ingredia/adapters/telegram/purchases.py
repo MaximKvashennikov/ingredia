@@ -47,6 +47,14 @@ class PurchaseHandlers:
                 "Не удалось распознать фото.\n" + FailureReply.from_failure(error).render()
             )
 
+    @staticmethod
+    async def unsupported_voice(message: Message) -> None:
+        """Offer the supported purchase inputs without downloading or transcribing audio."""
+        await message.answer(
+            "Голосовые и аудио не распознаются.\n"
+            "Пришлите фото магазинного чека, фото продуктов или напишите покупки текстом."
+        )
+
     async def text(self, message: Message) -> None:
         """Accept natural grocery text without imposing command syntax."""
         if message.from_user is None:
@@ -76,7 +84,14 @@ class PurchaseHandlers:
         )
         if not result.products:
             await message.answer(
-                "🔎 Продукты не найдены.\nПришлите другое фото или перечислите покупки текстом."
+                "🔎 Не удалось составить список покупок.\n"
+                "Пришлите более чёткое фото чека или продуктов, либо напишите список."
+                + (
+                    "\n\n" + "\n".join("ℹ️ " + warning for warning in result.warnings)
+                    if result.warnings
+                    else ""
+                ),
+                parse_mode=None,
             )
             return
         try:
@@ -97,7 +112,7 @@ class PurchaseHandlers:
         has_estimates = any(preview.estimates)
         if has_estimates:
             await message.answer(
-                "📅 Даты «по оценке» рассчитаны от сегодняшней покупки при хранении ≤4 °C. "
+                "📅 Даты «по оценке» рассчитаны от сегодняшней покупки при условиях в карточках. "
                 "Это ориентир, не срок с упаковки. Если условия другие, добавьте без оценок."
             )
         for offset in range(0, len(result.products), 4):

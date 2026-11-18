@@ -36,7 +36,11 @@ def check_ingredient(item: Ingredient, stock: list[BatchView], today: date) -> I
     status = Availability.MISSING
     note = "Нет в холодильнике" if not matching else "Недостаточно; нужно докупить"
     if matching and not usable:
-        note = "Срок всех подходящих партий истёк; не учитываются"
+        note = (
+            "Дата проверки прошла; уточните срок"
+            if any(row.expiry_source == "review" for row in matching)
+            else "Срок всех подходящих партий истёк; не учитываются"
+        )
     if total >= Decimal(str(item.quantity)) * scale:
         status = Availability.AVAILABLE
         note = "Количество есть"
@@ -47,6 +51,8 @@ def check_ingredient(item: Ingredient, stock: list[BatchView], today: date) -> I
         dates = []
         if any(row.expiry_source == "estimated" for row in usable):
             dates.append("срок по оценке")
+        if any(row.expiry_source == "review" for row in usable):
+            dates.append("срок требует проверки")
         if any(row.expiry is None for row in usable):
             dates.append("срок неизвестен")
         if dates:
